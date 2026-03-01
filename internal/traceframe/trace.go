@@ -1,8 +1,8 @@
-package aacfile
+package traceframe
 
-// FrameTrace captures per-access-unit synthesis diagnostics. It exists for
-// local parity tooling and tests, not normal playback.
-type FrameTrace struct {
+// Frame captures per-access-unit synthesis diagnostics. It exists for local
+// parity tooling and tests, not normal playback.
+type Frame struct {
 	AUIndex         int
 	PCMStartFrame   int64
 	PCMFrames       int
@@ -28,7 +28,7 @@ type FrameTrace struct {
 	PCMPeak         float64
 }
 
-// TraceSink receives per-frame diagnostics during decode.
-type TraceSink interface {
-	OnFrame(FrameTrace)
+// Sink receives per-frame diagnostics during decode.
+type Sink interface {
+	OnFrame(Frame)
 }

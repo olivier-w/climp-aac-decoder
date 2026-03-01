@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 
+	"github.com/olivier-w/climp-aac-decoder/internal/traceframe"
 	"github.com/olivier-w/climp-aac-decoder/third_party/gaad"
 )
 
@@ -27,7 +28,7 @@ type synthDecoder struct {
 	state     []channelState
 	scratch   []channelScratch
 	noiseSeed uint32
-	trace     TraceSink
+	trace     traceframe.Sink
 
 	longIMDCTWork  imdctWork
 	shortIMDCTWork imdctWork
@@ -75,7 +76,7 @@ type channelSynthStats struct {
 	pcmPeak         float64
 }
 
-func newSynthDecoder(cfg ascConfig, trace TraceSink) *synthDecoder {
+func newSynthDecoder(cfg ascConfig, trace traceframe.Sink) *synthDecoder {
 	initDecodeTables()
 
 	state := make([]channelState, cfg.channelConfig)
@@ -109,7 +110,7 @@ func newSynthDecoder(cfg ascConfig, trace TraceSink) *synthDecoder {
 	return d
 }
 
-func (d *synthDecoder) reset(trace TraceSink) {
+func (d *synthDecoder) reset(trace traceframe.Sink) {
 	d.trace = trace
 	d.noiseSeed = 1
 	for i := range d.state {
@@ -159,10 +160,10 @@ func (d *synthDecoder) decodeAccessUnit(src *containerSource, payload []byte, un
 	}
 }
 
-func (d *synthDecoder) decodeSCE(sce *gaad.SingleChannelElement) ([]float64, FrameTrace, error) {
+func (d *synthDecoder) decodeSCE(sce *gaad.SingleChannelElement) ([]float64, traceframe.Frame, error) {
 	decoded, err := d.buildICSDecoded(0, sce.Channel_stream)
 	if err != nil {
-		return nil, FrameTrace{}, err
+		return nil, traceframe.Frame{}, err
 	}
 
 	d.applyPNSMono(decoded)
@@ -175,7 +176,7 @@ func (d *synthDecoder) decodeSCE(sce *gaad.SingleChannelElement) ([]float64, Fra
 	trace.TNSFilters = decoded.tnsFilters
 	trace.SpecPeakPreTNS = peakAbs(decoded.spec)
 	if err := d.applyTNS(decoded); err != nil {
-		return nil, FrameTrace{}, err
+		return nil, traceframe.Frame{}, err
 	}
 	trace.SpecPeakPostTNS = peakAbs(decoded.spec)
 	pcm, stats := d.synthChannel(0, decoded.meta, decoded.spec, decoded.currentShape)
@@ -186,14 +187,14 @@ func (d *synthDecoder) decodeSCE(sce *gaad.SingleChannelElement) ([]float64, Fra
 	return d.monoOut, trace, nil
 }
 
-func (d *synthDecoder) decodeCPE(cpe *gaad.ChannelPairElement) ([]float64, FrameTrace, error) {
+func (d *synthDecoder) decodeCPE(cpe *gaad.ChannelPairElement) ([]float64, traceframe.Frame, error) {
 	left, err := d.buildICSDecoded(0, cpe.Channel_stream1)
 	if err != nil {
-		return nil, FrameTrace{}, err
+		return nil, traceframe.Frame{}, err
 	}
 	right, err := d.buildICSDecoded(1, cpe.Channel_stream2)
 	if err != nil {
-		return nil, FrameTrace{}, err
+		return nil, traceframe.Frame{}, err
 	}
 
 	msUsed := cpe.Ms_used
@@ -211,10 +212,10 @@ func (d *synthDecoder) decodeCPE(cpe *gaad.ChannelPairElement) ([]float64, Frame
 	trace.TNSFilters = left.tnsFilters + right.tnsFilters
 	trace.SpecPeakPreTNS = maxFloat64(peakAbs(left.spec), peakAbs(right.spec))
 	if err := d.applyTNS(left); err != nil {
-		return nil, FrameTrace{}, err
+		return nil, traceframe.Frame{}, err
 	}
 	if err := d.applyTNS(right); err != nil {
-		return nil, FrameTrace{}, err
+		return nil, traceframe.Frame{}, err
 	}
 	trace.SpecPeakPostTNS = maxFloat64(peakAbs(left.spec), peakAbs(right.spec))
 
@@ -683,7 +684,7 @@ func floatToPCM16(sample float64) int16 {
 	return int16(sample - 0.5)
 }
 
-func (d *synthDecoder) emitTrace(src *containerSource, unitIndex, rawStart, pcmFrames int, trace FrameTrace) {
+func (d *synthDecoder) emitTrace(src *containerSource, unitIndex, rawStart, pcmFrames int, trace traceframe.Frame) {
 	if d.trace == nil {
 		return
 	}
@@ -707,11 +708,11 @@ func (d *synthDecoder) emitTrace(src *containerSource, unitIndex, rawStart, pcmF
 	d.trace.OnFrame(trace)
 }
 
-func baseTrace(meta *icsMeta) FrameTrace {
+func baseTrace(meta *icsMeta) traceframe.Frame {
 	if meta == nil {
-		return FrameTrace{}
+		return traceframe.Frame{}
 	}
-	return FrameTrace{
+	return traceframe.Frame{
 		WindowSequence:  meta.windowSequence,
 		WindowShape:     meta.windowShape,
 		NumWindows:      meta.numWindows,

@@ -7,6 +7,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/olivier-w/climp-aac-decoder/internal/traceframe"
 )
 
 // Info describes the decoded PCM stream exposed by Reader.
@@ -23,7 +25,7 @@ type Reader struct {
 	source *containerSource
 
 	decoder *synthDecoder
-	trace   TraceSink
+	trace   traceframe.Sink
 
 	pos    int64
 	length int64
@@ -45,11 +47,11 @@ func Open(src io.ReaderAt, size int64, name string) (*Reader, error) {
 
 // OpenWithTrace indexes src and emits per-access-unit synthesis traces into
 // sink while exposing the normal PCM16LE Reader interface.
-func OpenWithTrace(src io.ReaderAt, size int64, name string, sink TraceSink) (*Reader, error) {
+func OpenWithTrace(src io.ReaderAt, size int64, name string, sink traceframe.Sink) (*Reader, error) {
 	return openWithTrace(src, size, name, sink)
 }
 
-func openWithTrace(src io.ReaderAt, size int64, name string, sink TraceSink) (*Reader, error) {
+func openWithTrace(src io.ReaderAt, size int64, name string, sink traceframe.Sink) (*Reader, error) {
 	if size < 0 {
 		return nil, malformedf("invalid input size: %d", size)
 	}
@@ -87,7 +89,7 @@ func OpenFile(f *os.File) (*Reader, error) {
 
 // OpenFileWithTrace opens a local AAC-family file and forwards synthesis traces
 // into sink while exposing the normal PCM16LE Reader interface.
-func OpenFileWithTrace(f *os.File, sink TraceSink) (*Reader, error) {
+func OpenFileWithTrace(f *os.File, sink traceframe.Sink) (*Reader, error) {
 	info, err := f.Stat()
 	if err != nil {
 		return nil, fmt.Errorf("stat input: %w", err)

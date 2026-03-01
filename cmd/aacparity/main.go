@@ -15,6 +15,7 @@ import (
 	"sort"
 
 	aacfile "github.com/olivier-w/climp-aac-decoder/aacfile"
+	"github.com/olivier-w/climp-aac-decoder/internal/traceframe"
 )
 
 type parityConfig struct {
@@ -97,8 +98,8 @@ type pcmStats struct {
 }
 
 type parityOffset struct {
-	label string
-	index int
+	label  string
+	index  int
 	offset int64
 }
 
@@ -652,7 +653,7 @@ type traceWindowCollector struct {
 	frames []frameTraceReport
 }
 
-func (c *traceCollector) OnFrame(trace aacfile.FrameTrace) {
+func (c *traceCollector) OnFrame(trace traceframe.Frame) {
 	if c == nil {
 		return
 	}
