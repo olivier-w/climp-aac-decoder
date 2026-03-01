@@ -6,7 +6,6 @@ import (
 	"encoding/hex"
 	"io"
 	"os"
-	"path/filepath"
 	"testing"
 )
 
@@ -34,7 +33,7 @@ func TestOpenFileReadsAACFixtures(t *testing.T) {
 		"smoke-aac-45s.m4b",
 	} {
 		t.Run(name, func(t *testing.T) {
-			f, err := os.Open(fixturePath(name))
+			f, err := os.Open(fixturePath(t, name))
 			if err != nil {
 				t.Fatalf("Open() error = %v", err)
 			}
@@ -91,7 +90,7 @@ func TestOpenFileReadsAACFixtures(t *testing.T) {
 }
 
 func TestReaderRepeatedSeekCycles(t *testing.T) {
-	f, err := os.Open(fixturePath("smoke-aac-45s.m4b"))
+	f, err := os.Open(fixturePath(t, "smoke-aac-45s.m4b"))
 	if err != nil {
 		t.Fatalf("Open() error = %v", err)
 	}
@@ -126,7 +125,7 @@ func TestReaderRepeatedSeekCycles(t *testing.T) {
 }
 
 func TestReaderSeekMatchesContinuousDecode(t *testing.T) {
-	f1, err := os.Open(fixturePath("smoke-aac-45s.m4b"))
+	f1, err := os.Open(fixturePath(t, "smoke-aac-45s.m4b"))
 	if err != nil {
 		t.Fatalf("Open() error = %v", err)
 	}
@@ -138,7 +137,7 @@ func TestReaderSeekMatchesContinuousDecode(t *testing.T) {
 	}
 	defer continuous.Close()
 
-	f2, err := os.Open(fixturePath("smoke-aac-45s.m4b"))
+	f2, err := os.Open(fixturePath(t, "smoke-aac-45s.m4b"))
 	if err != nil {
 		t.Fatalf("Open() error = %v", err)
 	}
@@ -202,7 +201,7 @@ func TestReaderSeekMatchesContinuousDecode(t *testing.T) {
 }
 
 func TestOpenCopiesReaderAtInput(t *testing.T) {
-	data, err := os.ReadFile(fixturePath("smoke-aac-12s.aac"))
+	data, err := os.ReadFile(fixturePath(t, "smoke-aac-12s.aac"))
 	if err != nil {
 		t.Fatalf("ReadFile() error = %v", err)
 	}
@@ -225,7 +224,7 @@ func TestReaderWindowContainsVariation(t *testing.T) {
 		"smoke-aac-45s.m4b",
 	} {
 		t.Run(name, func(t *testing.T) {
-			f, err := os.Open(fixturePath(name))
+			f, err := os.Open(fixturePath(t, name))
 			if err != nil {
 				t.Fatalf("Open() error = %v", err)
 			}
@@ -264,7 +263,7 @@ func TestReaderWindowContainsVariation(t *testing.T) {
 func TestReaderRegressionWindows(t *testing.T) {
 	for name, wantHashes := range regressionWindowHashes {
 		t.Run(name, func(t *testing.T) {
-			f, err := os.Open(fixturePath(name))
+			f, err := os.Open(fixturePath(t, name))
 			if err != nil {
 				t.Fatalf("Open() error = %v", err)
 			}
@@ -303,10 +302,6 @@ func TestReaderRegressionWindows(t *testing.T) {
 			}
 		})
 	}
-}
-
-func fixturePath(name string) string {
-	return filepath.Join("..", "..", "songs", name)
 }
 
 func readWindowBySeek(r *Reader, offset int64, size int) ([]byte, error) {

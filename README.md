@@ -11,3 +11,8 @@ Current implementation notes:
 - rejects HE-AAC, HE-AACv2, SBR, and PS bitstreams
 - uses `ffmpeg` only as a local validation oracle via `cmd/aacparity`
 - still under active parity work before it should be treated as a production-grade standalone decoder
+
+Test fixture notes:
+
+- smoke fixtures live under `testdata/fixtures/`
+- large audiobook parity and benchmark runs use `CLIMP_AAC_LARGE_FIXTURE`

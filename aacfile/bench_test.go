@@ -17,7 +17,7 @@ func BenchmarkOpenFile(b *testing.B) {
 	} {
 		b.Run(name, func(b *testing.B) {
 			b.ReportAllocs()
-			path := fixturePath(name)
+			path := fixturePath(b, name)
 
 			for i := 0; i < b.N; i++ {
 				f, err := os.Open(path)
@@ -51,7 +51,7 @@ func BenchmarkDecodeAll(b *testing.B) {
 		"BeyondGoodEvil_librivox.m4b",
 	} {
 		b.Run(name, func(b *testing.B) {
-			path := fixturePath(name)
+			path := fixturePath(b, name)
 			probeFile, err := os.Open(path)
 			if err != nil {
 				b.Fatalf("Open(%q) error = %v", path, err)
@@ -113,7 +113,7 @@ func BenchmarkDecodeAll(b *testing.B) {
 }
 
 func BenchmarkSeekReadAudiobook(b *testing.B) {
-	path := fixturePath("BeyondGoodEvil_librivox.m4b")
+	path := fixturePath(b, "BeyondGoodEvil_librivox.m4b")
 	f, err := os.Open(path)
 	if err != nil {
 		b.Fatalf("Open(%q) error = %v", path, err)

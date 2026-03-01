@@ -32,11 +32,3 @@ type FrameTrace struct {
 type TraceSink interface {
 	OnFrame(FrameTrace)
 }
-
-type traceSinkFunc func(FrameTrace)
-
-func (f traceSinkFunc) OnFrame(trace FrameTrace) {
-	if f != nil {
-		f(trace)
-	}
-}
