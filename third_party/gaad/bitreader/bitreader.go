@@ -228,9 +228,6 @@ func (p *BitReader) ReadUE() (uint32, error) {
 			return val - 1, nil // Subtract onebecause we stole a bit for 0.
 		}
 	}
-
-	// Should not get here
-	return 0, ErrExpGolombDecode
 }
 
 // Read Signed Exp-Golomb
